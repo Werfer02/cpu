@@ -1,0 +1,9 @@
+TEST;
+NOOP;
+NOOP;
+ECHO 5 Loop!;
+JUMP 0;
+ECHO 12 inaccessible;
+NOOP;
+PROGEND;
+TEST;
