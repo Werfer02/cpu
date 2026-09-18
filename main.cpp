@@ -30,7 +30,9 @@ enum class operation{
 	WRITESCREEN,
 	JUMPREG,
 	JUMPZEROREG,
-	LABEL
+	LABEL,
+	ROM,
+	GET
 };
 
 std::unordered_map<byte, operation>  byteToOperation{
@@ -49,6 +51,8 @@ std::unordered_map<byte, operation>  byteToOperation{
 	{0b00001100,    operation::JUMPREG},
 	{0b00001101,operation::JUMPZEROREG},
 	{0b00001110,      operation::LABEL},
+	{0b00001111,        operation::ROM},
+	{0b00010000,        operation::GET},
 };
 
 std::unordered_map<std::string, operation>  stringToOperation{
@@ -67,6 +71,8 @@ std::unordered_map<std::string, operation>  stringToOperation{
 	{"JUMPREG",        operation::JUMPREG},
 	{"JUMPZEROREG",operation::JUMPZEROREG},
 	{"LABEL",            operation::LABEL},
+	{"ROM",                operation::ROM},
+	{"GET",                operation::GET},
 };
 
 enum class operandType {
@@ -89,18 +95,20 @@ std::unordered_map<operation, operationInfo> operationInfoMap{
     {operation::PROG_END,   {0b00000001, {}}},
     {operation::TEST,       {0b00000010, {}}},
     {operation::NOOP,       {0b00000000, {}}},
-    {operation::ECHO,       {0b00000011, {operandType::BYTE, operandType::BYTE}}},   // lengthreg, stringadressreg
-    {operation::JUMP,       {0b00000100, {operandType::LABEL}}},					 // jumplabel
-    {operation::WRITEHEAP,  {0b00000101, {operandType::BYTE, operandType::BYTE}}},   // addressreg, reg 
-    {operation::READHEAP,   {0b00000110, {operandType::BYTE, operandType::BYTE}}},   // reg, addressreg 
-    {operation::JUMPZERO,   {0b00000111, {operandType::BYTE, operandType::LABEL}}},  // jumplabel, zeroreg
-    {operation::WRITEREG,   {0b00001000, {operandType::BYTE, operandType::BYTE}}},   // reg, value      <-- ideally this should be the only instruction to take literals
-    {operation::ADD,        {0b00001001, {operandType::BYTE, operandType::BYTE}}},   // reg, reg
-    {operation::SUB,        {0b00001010, {operandType::BYTE, operandType::BYTE}}},   // reg, reg
-    {operation::WRITESCREEN,{0b00001011, {operandType::BYTE, operandType::BYTE}}},   // yreg, xreg (to write to screen, write x,y to these registers, write to regPixelR,G,B then call writescreen)
-	{operation::JUMPREG,    {0b00001100, {operandType::BYTE}}},						 // addressreg
-	{operation::JUMPZEROREG,{0b00001101, {operandType::BYTE, operandType::BYTE}}},   // addressreg, zeroreg
-	{operation::LABEL,      {0b00001110, {operandType::LABEL}}},						 // label
+    {operation::ECHO,       {0b00000011, {operandType::BYTE, operandType::BYTE}}},  // lengthreg, stringadressreg
+    {operation::JUMP,       {0b00000100, {operandType::LABEL}}},					// jumplabel
+    {operation::WRITEHEAP,  {0b00000101, {operandType::BYTE, operandType::BYTE}}},  // addressreg, reg 
+    {operation::READHEAP,   {0b00000110, {operandType::BYTE, operandType::BYTE}}},  // reg, addressreg 
+    {operation::JUMPZERO,   {0b00000111, {operandType::BYTE, operandType::LABEL}}}, // zeroreg, jumplabel
+    {operation::WRITEREG,   {0b00001000, {operandType::BYTE, operandType::BYTE}}},  // reg, value      <-- ideally this should be the only instruction to take literals
+    {operation::ADD,        {0b00001001, {operandType::BYTE, operandType::BYTE}}},  // reg, reg
+    {operation::SUB,        {0b00001010, {operandType::BYTE, operandType::BYTE}}},  // reg, reg
+    {operation::WRITESCREEN,{0b00001011, {operandType::BYTE, operandType::BYTE}}},  // yreg, xreg (to write to screen, write x,y to these registers, write to regPixelR,G,B then call writescreen)
+	{operation::JUMPREG,    {0b00001100, {operandType::BYTE}}},						// addressreg
+	{operation::JUMPZEROREG,{0b00001101, {operandType::BYTE, operandType::BYTE}}},  // zeroreg, addressreg
+	{operation::LABEL,      {0b00001110, {operandType::LABEL}}},					// label
+	{operation::ROM,        {0b00001111, {operandType::BYTE}}},						// literal rom length
+	{operation::GET,        {0b00010000, {operandType::BYTE, operandType::BYTE}}},	// reg, infobytereg (hardcoded info bytes for different possible info to get)
 };
 
 class Sim{
@@ -122,7 +130,7 @@ class Sim{
 
 	byte heap[HEAP_SIZE] = {0};
 	
-	address progCounter = 0;
+	address progStart = 0;
 	// [size][occupied][data]
 	
 	address useBlock(address blockAddress, int bytes){
@@ -193,7 +201,7 @@ public:
 	}
 
 	void setProgStart(address a){
-		progCounter = a;
+		progStart = a;
 	}
 
 	void initScreen(){
@@ -202,8 +210,8 @@ public:
 	}
 
 	void run(){
+		address progCounter = progStart;
 		byte b = heap[progCounter];
-		address progStart = progCounter;
 		while(progCounter < HEAP_SIZE && b != operationInfoMap[operation::PROG_END].binary){
 			b = heap[progCounter];
 			if(byteToOperation.find(b) == byteToOperation.end()){
@@ -233,7 +241,7 @@ public:
 				case operation::JUMPREG : {
 					progCounter++;
 					//std::cout << "jump to: " << (int)heap[progCounter] << "\n";
-					progCounter = progStart + *getReg(heap[progCounter]);
+					progCounter = *getReg(heap[progCounter]) + progStart;
 					progCounter--; // go back one because loop goes forward one
 					break;
 				}
@@ -253,9 +261,9 @@ public:
 				}
 				case operation::JUMPZEROREG : {
 					progCounter++;
-					address jumpTo = *getReg(heap[progCounter]);
-					progCounter++;
 					byte* reg = getReg(heap[progCounter]);
+					progCounter++;
+					address jumpTo = *getReg(heap[progCounter]);
 					if(*reg == 0){
 						//std::cout << "jump to (zero): " << (int)jumpTo << "\n";
 						progCounter = progStart + jumpTo;
@@ -265,6 +273,7 @@ public:
 				}
 				case operation::WRITEREG : {
 					progCounter++;
+					//std::cout << "writereg: " << (int)heap[progCounter] << "\n";
 					byte* reg = getReg(heap[progCounter]);
 					progCounter++;
 					*reg = heap[progCounter];
@@ -303,9 +312,9 @@ public:
 				}
 				case operation::JUMPZERO : {
 					progCounter++;
-					address jumpTo = heap[progCounter];
-					progCounter++;
 					byte* reg = getReg(heap[progCounter]);
+					progCounter++;
+					address jumpTo = heap[progCounter];
 					if(*reg == 0){
 						//std::cout << "jump to (zero): " << (int)jumpTo << "\n";
 						progCounter = progStart + jumpTo;
@@ -316,8 +325,36 @@ public:
 				case operation::LABEL : {
 					break;
 				}
+				case operation::ROM : { // at start of rom
+					//std::cout << "at rom: " << (int)progCounter << "\n";
+					progCounter++;
+					progCounter += heap[progCounter] + 1; // skip data and this byte
+					//std::cout << "now at byte: " << (int)progCounter << "\n";
+					progCounter--; // go back one because loop goes forward one
+					break;
+				}
+				case operation::GET : {
+					progCounter++;
+					byte* toReg = getReg(heap[progCounter]);
+					progCounter++;
+					byte infoByte = *getReg(heap[progCounter]);
+					*toReg = getInfo(infoByte);
+					break;
+				}
 			}
 			progCounter++;
+		}
+	}
+
+	byte getInfo(byte infoByte){
+		switch(infoByte){
+			case 'S' : {
+				return progStart;
+			}
+			default : {
+				std::cerr << ansi::red << "no info for byte: " << infoByte << ansi::reset << "\n";
+				return 0;
+			}
 		}
 	}
 
@@ -331,7 +368,7 @@ public:
 			case 'G' : return &regPixelG;
 			case 'B' : return &regPixelB;
 			default : {
-				std::cerr << ansi::red << "no register: " << index << ansi::reset << "\n";
+				std::cerr << ansi::red << "no register: " << (int)index << ansi::reset << "\n";
 				return nullptr;
 			}
 		}
@@ -413,18 +450,62 @@ std::vector<instruction> readInstructionsFromFile(const std::string& path){
 	std::ifstream file(path);
 	std::vector<instruction> instructions;
 	std::stringstream linestream;
-	
+	bool hasROM = false;
+
+	int ROMcounter = 0;
+
 	for(std::string line; std::getline(file, line, ';');){
 		linestream.clear();
 		linestream.str(line);
 		std::string word;
-		if(linestream >> word){ // first word
+
+		if(ROMcounter > 0){
+			linestream >> word;
+			if(word.length() == 1 && !isdigit(word[0])){ // if single non digit char
+				instructions[instructions.size() - 1].operands.push_back({operandType::BYTE, (byte)line[0]});
+				ROMcounter--;
+			} else try { 								 // try convert whole line to number
+				size_t numendpos = 0;
+				int num = (byte)std::stoi(word, &numendpos);
+				if(numendpos == word.length()){			 // if whole line consumed as number
+					instructions[instructions.size() - 1].operands.push_back({operandType::BYTE, (byte)num});
+					ROMcounter--;
+				} else throw std::invalid_argument("stoi");
+			}
+			catch (std::invalid_argument){				 // write line byte by byte
+				for(byte c : word){
+					instructions[instructions.size() - 1].operands.push_back({operandType::BYTE, c});
+					ROMcounter--;
+				}
+			}
+		} else if(linestream >> word){ // first word
 			if(stringToOperation.find(word) != stringToOperation.end()){
 				instruction i;
 				i.op = stringToOperation[word];
-				while(linestream >> word && i.operands.size() < operationInfoMap[i.op].operands.size()){ // rest of words up to max operands
+				if(i.op == operation::ROM){
+					if(hasROM){
+						std::cerr << ansi::red << "more than one ROM instruction found " << ansi::reset << "\n";
+						return {};
+					}
+					linestream >> word;
+
+					int a;
+					if(word.length() == 1 && !isdigit(word[0])){
+						a = word[0];
+					} else {
+						a = std::stoi(word);
+					}
+					if(a > byte_max){
+						std::cerr << ansi::red << "byte operand too big: " << a << ansi::reset << "\n";
+						return {};
+					} else i.operands.push_back({operandType::BYTE, (byte)a});
+
+					hasROM = true;
+					ROMcounter = a;
+				}
+				else while(linestream >> word && i.operands.size() < operationInfoMap[i.op].operands.size()){ // rest of words up to max operands
 					switch(operationInfoMap[i.op].operands[i.operands.size()]){ // no -1 because looking for next operand
-						case operandType::BYTE:{
+						case operandType::BYTE : {
 							int a; 
 							if(word.length() == 1 && !isdigit(word[0])){
 								a = word[0];
@@ -437,12 +518,8 @@ std::vector<instruction> readInstructionsFromFile(const std::string& path){
 							} else i.operands.push_back({operandType::BYTE, (byte)a});
 							break;
 						}
-						case operandType::LABEL:{
-							i.operands.push_back({
-								operandType::LABEL,
-								0,
-								word
-							});
+						case operandType::LABEL : {
+							i.operands.push_back({operandType::LABEL, 0, word});
 							break;
 						}
 					}
@@ -479,6 +556,14 @@ std::vector<byte> instructionsToBinary(const std::vector<instruction>& instructi
 			labelsdefined[i.operands[0].stringvalue] = position;
 			continue;
 		}
+		else if(i.op == operation::ROM){
+			prog.push_back(operationInfoMap[i.op].binary);
+			prog.push_back(i.operands[0].bytevalue);
+			for(int b = 1; b <= i.operands[0].bytevalue; b++){ // skip first operand, use it as length, need the <= !!!
+				prog.push_back(i.operands[b].bytevalue);
+			}
+			continue;
+		}
 		prog.push_back(operationInfoMap[i.op].binary);
 		position++;
 		for(auto op : i.operands) {
@@ -510,7 +595,7 @@ std::vector<byte> instructionsToBinary(const std::vector<instruction>& instructi
 }
 
 int main(int argc, char** argv){
-	std::string file = "instructions.inst";
+	std::string file = "romtest.inst";
 	if(argc >= 2){
 		file = argv[1];
 	}
@@ -521,6 +606,8 @@ int main(int argc, char** argv){
 	address a = s.allocate(program.size()*sizeof(byte));
 	s.write(program.data(), a, program.size() * sizeof(byte));
 	s.setProgStart(a);
+	//s.printHeap();
 	s.run();
 	s.printScreen();
+	//s.printRegisters();
 }
