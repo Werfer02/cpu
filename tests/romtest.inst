@@ -1,11 +1,15 @@
-ROM 10;
-helloworld;
+ROM 11;
+hello;
+ ;
+world;
 
 TEST;
 WRITEREG 0 2;
-WRITEREG 1 10;
+WRITEREG 1 11;
+
 WRITEREG 2 S;
 GET 3 2;
+
 ADD 3 0;
 
 ECHO 1 3;

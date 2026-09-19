@@ -1,0 +1,30 @@
+ROM 13;
+Hello, World!;
+
+JUMP start;
+
+
+LABEL echorom;
+
+WRITEREG 3 1;
+
+ADD 1 3;
+
+ADD 2 3;
+ADD 2 3;
+
+READHEAP 0 1;
+
+ECHO 0 2;
+PROGEND;
+
+
+LABEL start;
+
+TEST;
+
+WRITEREG 0 S;
+GET 1 0;
+GET 2 0;
+
+JUMP echorom;
