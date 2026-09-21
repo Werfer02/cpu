@@ -12,7 +12,7 @@ void printError(const std::vector<std::string>& args){
 	std::cout << ansi::reset;
 }
 void printError(const std::string& arg){
-    printError({arg});
+    printError({arg, ""});
 }
 
 void printInfo(const std::vector<std::string>& args){
@@ -24,5 +24,5 @@ void printInfo(const std::vector<std::string>& args){
 	std::cout << ansi::reset;
 }
 void printInfo(const std::string& arg){
-    printInfo({arg});
+    printInfo({arg, ""});
 }

@@ -8,7 +8,7 @@
 #include "util.hpp"
 
 int main(int argc, char** argv){
-	std::string file = "tests/romtest.inst";
+	std::string file = "tests/echoromtest.inst";
 	if(argc >= 2){
 		file = argv[1];
 	}
