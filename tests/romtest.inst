@@ -1,7 +1,5 @@
 ROM 11;
-hello;
- ;
-world;
+hello world;
 
 TEST;
 WRITEREG 0 2;
