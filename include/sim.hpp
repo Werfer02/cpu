@@ -27,6 +27,7 @@ class Sim{
 	std::array<std::string, SimConfig::SCREEN_W * SimConfig::SCREEN_H> regScreen;
 	bool screenReady = false;
 	bool screenWritten = false;
+	bool registersWritten = false;
 
 	byte heap[SimConfig::HEAP_SIZE] = {0};
 	

@@ -22,7 +22,7 @@ int main(int argc, char** argv){
 	if(a){
 		s.write(program.data(), a, program.size() * sizeof(byte));
 		s.setProgStart(a);
-		s.printHeap();
+		//s.printHeap();
 		s.run();
 		s.printScreen();
 		std::cout << "registers:\n";

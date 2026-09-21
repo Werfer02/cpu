@@ -146,7 +146,8 @@ void Sim::run(){
                 progCounter++;
                 byte* reg = getReg(heap[progCounter]);
                 progCounter++;
-                *reg = heap[*getReg(heap[progCounter])];;
+                *reg = heap[*getReg(heap[progCounter])];
+                registersWritten = true;
                 break;
             }
             case operation::JUMPZEROREG : {
@@ -167,6 +168,7 @@ void Sim::run(){
                 byte* reg = getReg(heap[progCounter]);
                 progCounter++;
                 *reg = heap[progCounter];
+                registersWritten = true;
                 break;
             }
             case operation::ADD : {
@@ -175,6 +177,7 @@ void Sim::run(){
                 progCounter++;
                 byte* secondReg = getReg(heap[progCounter]);
                 *firstReg += *secondReg;
+                registersWritten = true;
                 break;
             }
             case operation::SUB : {
@@ -183,6 +186,7 @@ void Sim::run(){
                 progCounter++;
                 byte* secondReg = getReg(heap[progCounter]);
                 *firstReg -= *secondReg;
+                registersWritten = true;
                 break;
             }
             case operation::WRITESCREEN : {
@@ -192,6 +196,7 @@ void Sim::run(){
                 progCounter++;
                 int y = *getReg(heap[progCounter]);
                 regScreen[(y * config.SCREEN_W) + x] = ansi::rgb(regPixelR, regPixelG, regPixelB) + "█" + ansi::reset;
+                registersWritten = true;
                 break;
             }
             case operation::JUMP : {
@@ -229,6 +234,7 @@ void Sim::run(){
                 progCounter++;
                 byte infoByte = *getReg(heap[progCounter]);
                 *toReg = getInfo(infoByte);
+                registersWritten = true;
                 break;
             }
         }
@@ -300,6 +306,10 @@ void Sim::printHeap(){
 }
 
 void Sim::printRegisters(){
+    if(!registersWritten){
+        printInfo("registers have not been written to, not printing\n");
+        return;
+    }
     std::cout << "reg0: " << (int)reg0 << "\n";
     std::cout << "reg1: " << (int)reg1 << "\n";
     std::cout << "reg2: " << (int)reg2 << "\n";
