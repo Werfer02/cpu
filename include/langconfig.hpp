@@ -22,6 +22,7 @@ struct LangConfig{
 		{operation::LABEL,      {0b00001110, {operandType::LABEL}}},					// label
 		{operation::ROM,        {0b00001111, {operandType::BYTE}}},						// literal rom length
 		{operation::GET,        {0b00010000, {operandType::BYTE, operandType::BYTE}}},	// reg, infobytereg (hardcoded info bytes for different possible info to get)
+		{operation::COPY,       {0b00010001, {operandType::BYTE, operandType::BYTE}}},	// toreg, fromreg
 	};
 
 	std::unordered_map<byte, operation>  byteToOperation{
@@ -42,5 +43,6 @@ struct LangConfig{
 		{0b00001110,      operation::LABEL},
 		{0b00001111,        operation::ROM},
 		{0b00010000,        operation::GET},
+		{0b00010001,       operation::COPY},
 	};
 };

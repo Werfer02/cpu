@@ -130,8 +130,8 @@ void Sim::run(){
             }
             case operation::JUMPREG : {
                 progCounter++;
-                //std::cout << "jump to: " << (int)heap[progCounter] << "\n";
-                progCounter = *getReg(heap[progCounter]) + progStart;
+                //std::cout << "jump to: " << (int)*getReg(heap[progCounter]) << "\n";
+                progCounter = *getReg(heap[progCounter]);
                 progCounter--; // go back one because loop goes forward one
                 break;
             }
@@ -157,7 +157,7 @@ void Sim::run(){
                 address jumpTo = *getReg(heap[progCounter]);
                 if(*reg == 0){
                     //std::cout << "jump to (zero): " << (int)jumpTo << "\n";
-                    progCounter = progStart + jumpTo;
+                    progCounter = jumpTo;
                     progCounter--; // go back one because loop goes forward one
                 }
                 break;
@@ -237,6 +237,14 @@ void Sim::run(){
                 registersWritten = true;
                 break;
             }
+            case operation::COPY : {
+                progCounter++;
+                byte* toReg = getReg(heap[progCounter]);
+                progCounter++;
+                byte fromReg = *getReg(heap[progCounter]);
+                *toReg = fromReg;
+                break;
+            }
         }
         progCounter++;
     }
@@ -247,9 +255,11 @@ void Sim::run(){
 byte Sim::getInfo(byte infoByte){
     switch(infoByte){
         case 'S' : {
+            //std::cout << "got start: " << (int)progStart << "\n";
             return progStart;
         }
         case 'C' : {
+            //std::cout << "got pc: " << (int)progCounter << "\n";
             return progCounter;
         }
         default : {
@@ -310,6 +320,7 @@ void Sim::printRegisters(){
         printInfo("registers have not been written to, not printing\n");
         return;
     }
+    std::cout << "registers:\n";
     std::cout << "reg0: " << (int)reg0 << "\n";
     std::cout << "reg1: " << (int)reg1 << "\n";
     std::cout << "reg2: " << (int)reg2 << "\n";

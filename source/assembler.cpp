@@ -24,7 +24,7 @@ std::vector<instruction> Assembler::readInstructionsFromFile(const std::string& 
         std::string word;
 
         if(ROMcounter > 0){ // if reading rom
-            //if(line[0] == '\n') line = line.substr(1); // skip first char (newline from formatting)
+            if(line[0] == '\n') line = line.substr(1); // skip first char (newline from formatting)
             if(line.length() == 1 && !isdigit(line[0])){ // if single non digit char
                 instructions[instructions.size() - 1].operands.push_back({operandType::BYTE, (byte)line[0]});
                 ROMcounter--;

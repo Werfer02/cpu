@@ -18,4 +18,5 @@ std::unordered_map<std::string, operation>  stringToOperation{
 	{"LABEL",            operation::LABEL},
 	{"ROM",                operation::ROM},
 	{"GET",                operation::GET},
+	{"COPY",              operation::COPY},
 };

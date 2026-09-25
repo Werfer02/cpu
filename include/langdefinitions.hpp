@@ -23,7 +23,8 @@ enum class operation{
 	JUMPZEROREG,
 	LABEL,
 	ROM,
-	GET
+	GET,
+	COPY
 };
 
 extern std::unordered_map<std::string, operation>  stringToOperation;

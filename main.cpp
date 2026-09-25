@@ -19,13 +19,12 @@ int main(int argc, char** argv){
 	std::vector<byte> program = as.instructionsToBinary(as.readInstructionsFromFile(file));
 
 	address a = s.allocate(program.size()*sizeof(byte));
+
 	if(a){
 		s.write(program.data(), a, program.size() * sizeof(byte));
-		s.setProgStart(a);
 		//s.printHeap();
-		s.run();
+		s.run(a);
 		s.printScreen();
-		std::cout << "registers:\n";
 		s.printRegisters();
 	} else{
 		printError("error allocating, got address 0\n");
