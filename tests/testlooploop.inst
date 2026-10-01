@@ -1,0 +1,52 @@
+TEST;
+
+JUMP start;
+
+
+
+LABEL start;
+
+LABEL i;
+WRITEREG 0 20;
+LABEL j;
+WRITEREG 1 10;
+
+LABEL x;
+WRITEREG 2 10;
+LABEL y;
+WRITEREG 3 10;
+
+LABEL sub;
+WRITEREG B 1;
+
+WRITEREG R 255;
+WRITEREG G 255;
+
+JUMP loop;
+
+
+
+LABEL loop;
+    ADD 2 0;
+    ADD 3 1;
+    SUB G B;
+    WRITESCREEN 2 3;
+
+    WRITEREG 2 10;
+    WRITEREG 3 10;
+    SUB 0 B;
+    JUMPZERO 0 doneInner;
+JUMP loop;
+
+LABEL doneInner;
+    WRITEREG 0 20;
+    SUB R B;
+
+    SUB 1 B;
+    JUMPZERO 1 done;
+JUMP loop;
+
+
+
+LABEL done;
+PROGEND;

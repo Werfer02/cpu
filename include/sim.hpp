@@ -3,41 +3,42 @@
 #include <array>
 
 #include "langconfig.hpp"
-
-struct SimConfig{
-	const static int HEAP_SIZE = 1*256;
-	const static int SCREEN_W = 32;
-	const static int SCREEN_H = 32;
-
-	LangConfig langConfig;
-};
+#include "register.hpp"
+#include "alu.hpp"
+#include "screen.hpp"
+#include "simconfig.hpp"
 
 class Sim{
 
 	SimConfig config;
 
-	byte reg0 = 0;
-	byte reg1 = 0;
-	byte reg2 = 0;
-	byte reg3 = 0;
+	Register reg0 = 0;
+	Register reg1 = 0;
+	Register reg2 = 0;
+	Register reg3 = 0;
 
-	byte regPixelR = 0;
-	byte regPixelG = 0;
-	byte regPixelB = 0;
-	std::array<std::string, SimConfig::SCREEN_W * SimConfig::SCREEN_H> regScreen;
-	bool screenReady = false;
-	bool screenWritten = false;
-	bool registersWritten = false;
+	ALU alu;
+
+	Register regPixelR = 0;
+	Register regPixelG = 0;
+	Register regPixelB = 0;
+	Screen screen;
+	flag screenWritten = false;
+
+	flag registersWritten = false;
 
 	byte heap[SimConfig::HEAP_SIZE] = {0};
+
+	flag memRead = false;
+	flag memWrite = false;
+	byte memAddr = 0;
+	byte memValue = 0;
 	
 	address progStart = 0;
 	address progCounter = 0;
 	// [size][occupied][data]
 	
 	address useBlock(address blockAddress, int bytes);
-
-	void initScreen();
 
 public:
 
@@ -58,7 +59,7 @@ public:
 
 	byte getInfo(byte infoByte);
 
-	byte* getReg(byte index);
+	Register& getReg(byte index);
 	
 	void printHeap();
 

@@ -23,13 +23,8 @@ address Sim::useBlock(address blockAddress, int bytes){
     }	
 }
 
-void Sim::initScreen(){
-    regScreen.fill(" ");
-    screenReady = true;
-}
-
 Sim::Sim(){
-    initScreen();
+    screen.init();
 }
 
 LangConfig Sim::getLangConfig(){
@@ -117,10 +112,11 @@ void Sim::run(){
             case operation::ECHO : {
                 std::string echostr;
                 progCounter++;
-                int echolen = *getReg(heap[progCounter]);
+                int echolen = getReg(heap[progCounter]).read();
                 progCounter++;
-                address echostart = *getReg(heap[progCounter]);
+                address echostart = getReg(heap[progCounter]).read();
                 address echoCounter = echostart;
+                //std::cout << "echo start: " << (int)echostart << ", length: " << (int)echolen << "\n";
                 while(echoCounter < echostart + echolen) {
                     echostr.push_back(heap[echoCounter]);
                     echoCounter++;
@@ -131,31 +127,31 @@ void Sim::run(){
             case operation::JUMPREG : {
                 progCounter++;
                 //std::cout << "jump to: " << (int)*getReg(heap[progCounter]) << "\n";
-                progCounter = *getReg(heap[progCounter]);
+                progCounter = getReg(heap[progCounter]).read();
                 progCounter--; // go back one because loop goes forward one
                 break;
             }
             case operation::WRITEHEAP : {
                 progCounter++;
-                address writeTo = *getReg(heap[progCounter]);
+                address writeTo = getReg(heap[progCounter]).read();
                 progCounter++;
-                heap[writeTo] = *getReg(heap[progCounter]);
+                heap[writeTo] = getReg(heap[progCounter]).read();
                 break;
             }
             case operation::READHEAP : {
                 progCounter++;
-                byte* reg = getReg(heap[progCounter]);
+                Register& reg = getReg(heap[progCounter]);
                 progCounter++;
-                *reg = heap[*getReg(heap[progCounter])];
+                reg.write(heap[getReg(heap[progCounter]).read()]);
                 registersWritten = true;
                 break;
             }
             case operation::JUMPZEROREG : {
                 progCounter++;
-                byte* reg = getReg(heap[progCounter]);
+                Register& reg = getReg(heap[progCounter]);
                 progCounter++;
-                address jumpTo = *getReg(heap[progCounter]);
-                if(*reg == 0){
+                address jumpTo = getReg(heap[progCounter]).read();
+                if(reg.read() == 0){
                     //std::cout << "jump to (zero): " << (int)jumpTo << "\n";
                     progCounter = jumpTo;
                     progCounter--; // go back one because loop goes forward one
@@ -165,37 +161,39 @@ void Sim::run(){
             case operation::WRITEREG : {
                 progCounter++;
                 //std::cout << "writereg: " << (int)heap[progCounter] << "\n";
-                byte* reg = getReg(heap[progCounter]);
+                Register& reg = getReg(heap[progCounter]);
                 progCounter++;
-                *reg = heap[progCounter];
+                reg.write(heap[progCounter]);
                 registersWritten = true;
                 break;
             }
             case operation::ADD : {
                 progCounter++;
-                byte* firstReg  = getReg(heap[progCounter]);
+                Register& firstReg  = getReg(heap[progCounter]);
                 progCounter++;
-                byte* secondReg = getReg(heap[progCounter]);
-                *firstReg += *secondReg;
+                int secondReg = getReg(heap[progCounter]).read();
+                int result = alu.add(firstReg.read(), secondReg);
+                firstReg.write(result);
                 registersWritten = true;
                 break;
             }
             case operation::SUB : {
                 progCounter++;
-                byte* firstReg  = getReg(heap[progCounter]);
+                Register& firstReg  = getReg(heap[progCounter]);
                 progCounter++;
-                byte* secondReg = getReg(heap[progCounter]);
-                *firstReg -= *secondReg;
+                int secondReg = getReg(heap[progCounter]).read();
+                int result = alu.subtract(firstReg.read(), secondReg);
+                firstReg.write(result);
                 registersWritten = true;
                 break;
             }
             case operation::WRITESCREEN : {
                 screenWritten = true;
                 progCounter++;
-                int x = *getReg(heap[progCounter]);
+                int x = getReg(heap[progCounter]).read();
                 progCounter++;
-                int y = *getReg(heap[progCounter]);
-                regScreen[(y * config.SCREEN_W) + x] = ansi::rgb(regPixelR, regPixelG, regPixelB) + "█" + ansi::reset;
+                int y = getReg(heap[progCounter]).read();
+                screen.write(x, y, regPixelR.read(), regPixelG.read(), regPixelB.read());
                 registersWritten = true;
                 break;
             }
@@ -207,10 +205,10 @@ void Sim::run(){
             }
             case operation::JUMPZERO : {
                 progCounter++;
-                byte* reg = getReg(heap[progCounter]);
+                Register& reg = getReg(heap[progCounter]);
                 progCounter++;
                 address jumpTo = heap[progCounter];
-                if(*reg == 0){
+                if(reg.read() == 0){
                     //std::cout << "jump to (zero): " << (int)jumpTo << "\n";
                     progCounter = progStart + jumpTo;
                     progCounter--; // go back one because loop goes forward one
@@ -230,19 +228,19 @@ void Sim::run(){
             }
             case operation::GET : {
                 progCounter++;
-                byte* toReg = getReg(heap[progCounter]);
+                Register& toReg = getReg(heap[progCounter]);
                 progCounter++;
-                byte infoByte = *getReg(heap[progCounter]);
-                *toReg = getInfo(infoByte);
+                byte infoByte = getReg(heap[progCounter]).read();
+                toReg.write(getInfo(infoByte));
                 registersWritten = true;
                 break;
             }
             case operation::COPY : {
                 progCounter++;
-                byte* toReg = getReg(heap[progCounter]);
+                Register& toReg = getReg(heap[progCounter]);
                 progCounter++;
-                byte fromReg = *getReg(heap[progCounter]);
-                *toReg = fromReg;
+                byte fromReg = getReg(heap[progCounter]).read();
+                toReg.write(fromReg);
                 break;
             }
         }
@@ -269,18 +267,18 @@ byte Sim::getInfo(byte infoByte){
     }
 }
 
-byte* Sim::getReg(byte index){
+Register& Sim::getReg(byte index){
     switch(index) {
-        case 0   : return &reg0;
-        case 1   : return &reg1;
-        case 2   : return &reg2;
-        case 3   : return &reg3;
-        case 'R' : return &regPixelR;
-        case 'G' : return &regPixelG;
-        case 'B' : return &regPixelB;
+        case 0   : return reg0;
+        case 1   : return reg1;
+        case 2   : return reg2;
+        case 3   : return reg3;
+        case 'R' : return regPixelR;
+        case 'G' : return regPixelG;
+        case 'B' : return regPixelB;
         default : {
             printError({"no register: '", std::to_string((char)index), "'\n"});
-            return nullptr;
+            return reg0;
         }
     }
 }
@@ -321,13 +319,13 @@ void Sim::printRegisters(){
         return;
     }
     std::cout << "registers:\n";
-    std::cout << "reg0: " << (int)reg0 << "\n";
-    std::cout << "reg1: " << (int)reg1 << "\n";
-    std::cout << "reg2: " << (int)reg2 << "\n";
-    std::cout << "reg3: " << (int)reg3 << "\n";
-    std::cout << "regPixelR: " << (int)regPixelR << "\n";
-    std::cout << "regPixelG: " << (int)regPixelG << "\n";
-    std::cout << "regPixelB: " << (int)regPixelB << "\n";
+    std::cout << "reg0: "      << (int)reg0.read()      << "\n";
+    std::cout << "reg1: "      << (int)reg1.read()      << "\n";
+    std::cout << "reg2: "      << (int)reg2.read()      << "\n";
+    std::cout << "reg3: "      << (int)reg3.read()      << "\n";
+    std::cout << "regPixelR: " << (int)regPixelR.read() << "\n";
+    std::cout << "regPixelG: " << (int)regPixelG.read() << "\n";
+    std::cout << "regPixelB: " << (int)regPixelB.read() << "\n";
 }
 
 void Sim::printScreen(){
@@ -335,10 +333,5 @@ void Sim::printScreen(){
         printInfo("screen has not been written to, not printing\n");
         return;
     }
-    for(int i = 0; i < config.SCREEN_H; i++){
-        for(int j = 0; j < config.SCREEN_W; j++){
-            std::cout << regScreen[(i*config.SCREEN_W) + j];
-        }
-        std::cout << "\n";
-    }
+    screen.print();
 }
