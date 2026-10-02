@@ -12,10 +12,7 @@ class Sim{
 
 	SimConfig config;
 
-	Register reg0 = 0;
-	Register reg1 = 0;
-	Register reg2 = 0;
-	Register reg3 = 0;
+	std::array<Register, SimConfig::NUM_REGISTERS> registers;
 
 	ALU alu;
 

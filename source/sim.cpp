@@ -269,16 +269,15 @@ byte Sim::getInfo(byte infoByte){
 
 Register& Sim::getReg(byte index){
     switch(index) {
-        case 0   : return reg0;
-        case 1   : return reg1;
-        case 2   : return reg2;
-        case 3   : return reg3;
         case 'R' : return regPixelR;
         case 'G' : return regPixelG;
         case 'B' : return regPixelB;
         default : {
+            if(index < registers.size()){
+                return registers[index];
+            }
             printError({"no register: '", std::to_string((char)index), "'\n"});
-            return reg0;
+            return registers[0];
         }
     }
 }
@@ -318,11 +317,15 @@ void Sim::printRegisters(){
         printInfo("registers have not been written to, not printing\n");
         return;
     }
+
     std::cout << "registers:\n";
-    std::cout << "reg0: "      << (int)reg0.read()      << "\n";
-    std::cout << "reg1: "      << (int)reg1.read()      << "\n";
-    std::cout << "reg2: "      << (int)reg2.read()      << "\n";
-    std::cout << "reg3: "      << (int)reg3.read()      << "\n";
+
+    int count = 0;
+    for(auto& reg : registers){
+        std::cout << "reg" << count << ": " << (int)reg.read() << "\n";
+        count++;
+    }
+
     std::cout << "regPixelR: " << (int)regPixelR.read() << "\n";
     std::cout << "regPixelG: " << (int)regPixelG.read() << "\n";
     std::cout << "regPixelB: " << (int)regPixelB.read() << "\n";

@@ -7,43 +7,52 @@ JUMP start;
 LABEL start;
 
 LABEL i;
-WRITEREG 0 20;
+WRITEREG 0 10;
 LABEL j;
-WRITEREG 1 10;
+WRITEREG 1 5;
 
-LABEL x;
-WRITEREG 2 10;
-LABEL y;
-WRITEREG 3 10;
+LABEL imax;
+WRITEREG 2 26;
+LABEL jmax;
+WRITEREG 3 13;
 
-LABEL sub;
-WRITEREG B 1;
+LABEL subR;
+WRITEREG 4 16;
+LABEL subG;
+WRITEREG 5 36;
+
+LABEL inc;
+WRITEREG 6 1;
 
 WRITEREG R 255;
 WRITEREG G 255;
+WRITEREG B 0;
 
 JUMP loop;
 
 
 
 LABEL loop;
-    ADD 2 0;
-    ADD 3 1;
-    SUB G B;
-    WRITESCREEN 2 3;
+    WRITESCREEN 0 1;
+    SUB R 4;
+    ADD 0 6;
 
-    WRITEREG 2 10;
-    WRITEREG 3 10;
-    SUB 0 B;
-    JUMPZERO 0 doneInner;
+    COPY 7 2;
+    SUB 7 0;
+
+    JUMPZERO 7 doneInner;
 JUMP loop;
 
 LABEL doneInner;
-    WRITEREG 0 20;
-    SUB R B;
+    SUB G 5;
+    ADD 1 6;
 
-    SUB 1 B;
-    JUMPZERO 1 done;
+    WRITEREG 0 10;
+
+    COPY 7 3;
+    SUB 7 1;
+
+    JUMPZERO 7 done;
 JUMP loop;
 
 
