@@ -22,7 +22,7 @@ void App::configure(int argc, char** argv){
         binaryInput = true;
 
     } else { // fallback
-        inputProgramPath = "tests/testlooploop.inst";
+        inputProgramPath = "testprograms/testlooploop.inst";
     }
 
     if(args.hasSingleDashArg("A")){
