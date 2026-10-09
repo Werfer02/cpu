@@ -15,11 +15,20 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(coututils)
 message(STATUS "coututils in: ${coututils_SOURCE_DIR}")
 
+FetchContent_Declare(
+    argparser
+    GIT_REPOSITORY https://github.com/Werfer02/argparser.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(argparser)
+message(STATUS "argparser in: ${argparser_SOURCE_DIR}")
+
 add_executable(out main.cpp source/util.cpp
                             source/assembler.cpp
                             source/sim.cpp
                             source/langdefinitions.cpp
                             source/register.cpp
                             source/screen.cpp
-                            source/alu.cpp)
-target_include_directories(out PRIVATE "${coututils_SOURCE_DIR}" include)
+                            source/alu.cpp
+                            source/app.cpp)
+target_include_directories(out PRIVATE "${coututils_SOURCE_DIR}" "${argparser_SOURCE_DIR}" include)
