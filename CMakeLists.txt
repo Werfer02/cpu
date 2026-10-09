@@ -23,12 +23,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(argparser)
 message(STATUS "argparser in: ${argparser_SOURCE_DIR}")
 
-add_executable(out main.cpp source/util.cpp
-                            source/assembler.cpp
-                            source/sim.cpp
-                            source/langdefinitions.cpp
-                            source/register.cpp
-                            source/screen.cpp
-                            source/alu.cpp
-                            source/app.cpp)
+add_executable(out main.cpp src/util.cpp
+                            src/assembler.cpp
+                            src/sim.cpp
+                            src/langdefinitions.cpp
+                            src/register.cpp
+                            src/screen.cpp
+                            src/alu.cpp
+                            src/app.cpp)
 target_include_directories(out PRIVATE "${coututils_SOURCE_DIR}" "${argparser_SOURCE_DIR}" include)
