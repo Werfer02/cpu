@@ -3,10 +3,10 @@
 #include "langconfig.hpp"
 
 struct SimConfig{
-	const static int HEAP_SIZE = 1*256;
-	const static int SCREEN_W = 32;
-	const static int SCREEN_H = 32;
-	const static int NUM_REGISTERS = 16;
+	int heapSize = 1*256;
+	int screenW = 32;
+	int screenH = 32;
+	int numRegisters = 16;
 
 	LangConfig langConfig;
 };

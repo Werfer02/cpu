@@ -51,16 +51,20 @@ void App::run(){
     
     if(wantsToOutputAssembly) writeBinaryToFile(binaryOutputPath, program);
 
-    if(wantsToPrintHeapBefore) s.printHeap();
-    if(wantsToRunProgram) {
+    address a;
+    if(wantsToPrintHeapBefore || wantsToRunProgram){
         address a = s.allocate(program.size()*sizeof(byte));
         if(a){
             s.write(program.data(), a, program.size() * sizeof(byte));
-            s.run(a);
         } else{
             printError("error allocating, got address 0\n");
         }
-        s.printScreen();
+        
+        if(wantsToPrintHeapBefore) s.printHeap();
+        if(wantsToRunProgram) {
+            s.run(a);
+            s.printScreen();
+        }
     }
     if(wantsToPrintHeapAfter) s.printHeap();
 

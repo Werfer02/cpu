@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include "langconfig.hpp"
 #include "register.hpp"
 #include "alu.hpp"
@@ -12,7 +10,7 @@ class Sim{
 
 	SimConfig config;
 
-	std::array<Register, SimConfig::NUM_REGISTERS> registers;
+	std::vector<Register> registers;
 
 	ALU alu;
 
@@ -24,7 +22,7 @@ class Sim{
 
 	flag registersWritten = false;
 
-	byte heap[SimConfig::HEAP_SIZE] = {0};
+	std::vector<byte> heap;
 
 	flag memRead = false;
 	flag memWrite = false;
@@ -39,7 +37,7 @@ class Sim{
 
 public:
 
-	Sim();
+	Sim(SimConfig c = {});
 
 	LangConfig getLangConfig();
 

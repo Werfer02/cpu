@@ -5,10 +5,12 @@
 #include "simconfig.hpp"
 
 class Screen{
-	std::array<std::string, SimConfig::SCREEN_W * SimConfig::SCREEN_H> data;
+	std::vector<std::string> data;
 	flag screenReady = false;
+	int width = 1, height = 1;
 public:
-	void init();
+	Screen();
+	Screen(int w, int h);
 	void write(int x, int y, int r, int g, int b);
 	void print();
 };

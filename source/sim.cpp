@@ -23,8 +23,11 @@ address Sim::useBlock(address blockAddress, int bytes){
     }	
 }
 
-Sim::Sim(){
-    screen.init();
+Sim::Sim(SimConfig c){
+    config = c;
+    registers = std::vector<Register>(config.numRegisters, Register(0));
+    heap = std::vector<byte>(config.heapSize, 0);
+    screen = Screen(config.screenW, config.screenH);
 }
 
 LangConfig Sim::getLangConfig(){
@@ -35,9 +38,9 @@ address Sim::allocate(byte bytes){
     int i = 0;
     int mergeCandidate = -1;
     
-    while(i < config.HEAP_SIZE){
+    while(i < config.heapSize){
         if(heap[i] == 0){ // this must mean free, size of a block is never zero, always jumping to size field
-            if(i + bytes < config.HEAP_SIZE){
+            if(i + bytes < config.heapSize){
                 heap[i] = bytes;
                 heap[i+1] = true;
                 return i+2;
@@ -95,7 +98,7 @@ void Sim::run(address a){
 void Sim::run(){
     std::cout << "< program started >\n";
     progCounter = progStart;
-    while(progCounter < config.HEAP_SIZE){
+    while(progCounter < config.heapSize){
         byte b = heap[progCounter];
         if (b == config.langConfig.operationInfoMap[operation::PROG_END].binary) break;
 
@@ -284,7 +287,7 @@ Register& Sim::getReg(byte index){
 
 void Sim::printHeap(){
     int emptyCounter = 0;
-    for(int i = 0; i < config.HEAP_SIZE; i++){
+    for(int i = 0; i < config.heapSize; i++){
         char c = heap[i];
 
         if (c == '\0') {
